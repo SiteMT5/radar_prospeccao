@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Radar — CRM de Prospecção (Online)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F6F3EC;
+    --surface:#FFFFFF;
+    --surface-2:#EEE9DD;
+    --ink:#23211C;
+    --ink-soft:#726C5C;
+    --ink-faint:#A29C89;
+    --line:#E3DCCB;
+    --accent:#2F6F5E;
+    --accent-ink:#F6F3EC;
+    --accent-soft:#E1EEE8;
+    --danger:#B3261E;
+    --danger-soft:#F7E4E2;
+
+    --s-novo:#9B9686;      --s-novo-soft:#EDEBE4;
+    --s-contatado:#2F6FB3; --s-contatado-soft:#E3EDF7;
+    --s-respondeu:#7C5CBF; --s-respondeu-soft:#EBE5F7;
+    --s-reuniao:#B5790E;   --s-reuniao-soft:#F6EAD3;
+    --s-proposta:#C4591A;  --s-proposta-soft:#F7E4D6;
+    --s-cliente:#227A4B;   --s-cliente-soft:#DEEFE3;
+    --s-perdido:#A63A32;   --s-perdido-soft:#F3DEDB;
+
+    --sync-ok:#227A4B;     --sync-ok-soft:#DEEFE3;
+    --sync-warn:#B5790E;   --sync-warn-soft:#F6EAD3;
+    --sync-err:#B3261E;    --sync-err-soft:#F7E4E2;
+
+    --radius-sm:8px;
+    --radius-md:14px;
+    --radius-lg:20px;
+    --shadow-card:0 1px 2px rgba(35,33,28,.06), 0 1px 0 rgba(35,33,28,.04);
+    --shadow-pop:0 12px 32px rgba(35,33,28,.16);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  h1,h2,h3,.display{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+  }
+  ::selection{background:var(--accent-soft);}
+  ::-webkit-scrollbar{width:10px;height:10px;}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:10px;}
+
+  a{color:inherit;}
+  button{font-family:inherit;}
+
+  .wrap{
+    max-width:1180px;
+    margin:0 auto;
+    padding:32px 24px 80px;
+  }
+
+  /* ---------- Header ---------- */
+  header.top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:24px;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+  }
+  .brand-eyebrow{
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:.14em;
+    color:var(--accent);
+    font-weight:700;
+    margin:0 0 6px;
+  }
+  .brand-title{
+    font-size:34px;
+    margin:0;
+    line-height:1.05;
+  }
+  .brand-sub{
+    color:var(--ink-soft);
+    font-size:14.5px;
+    margin:8px 0 0;
+    max-width:46ch;
+  }
+  .header-actions{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-end;
+    gap:10px;
+  }
+  .btn-primary{
+    background:var(--ink);
+    color:var(--bg);
+    border:none;
+    padding:13px 22px;
+    border-radius:999px;
+    font-weight:600;
+    font-size:14.5px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    box-shadow:var(--shadow-card);
+    transition:transform .15s ease, background .15s ease;
+    white-space:nowrap;
+  }
+  .btn-primary:hover{background:var(--accent);transform:translateY(-1px);}
+  .btn-primary:active{transform:translateY(0);}
+  .btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+
+  /* ---------- Sync status ---------- */
+  .sync-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-size:12.5px;
+    font-weight:700;
+    padding:7px 13px;
+    border-radius:999px;
+    white-space:nowrap;
+    transition:background .2s,color .2s;
+  }
+  .sync-dot{
+    width:7px;height:7px;border-radius:50%;
+    flex-shrink:0;
+  }
+  .sync-dot.pulse{animation:pulse 1.1s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+
+  .sync-badge.conectando{background:var(--sync-warn-soft);color:var(--sync-warn);}
+  .sync-badge.conectando .sync-dot{background:var(--sync-warn);}
+  .sync-badge.sincronizado{background:var(--sync-ok-soft);color:var(--sync-ok);}
+  .sync-badge.sincronizado .sync-dot{background:var(--sync-ok);}
+  .sync-badge.erro{background:var(--sync-err-soft);color:var(--sync-err);}
+  .sync-badge.erro .sync-dot{background:var(--sync-err);}
+
+  /* ---------- Goal bar ---------- */
+  .goal-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:20px 24px;
+    box-shadow:var(--shadow-card);
+    margin-bottom:22px;
+    display:flex;
+    align-items:center;
+    gap:22px;
+    flex-wrap:wrap;
+  }
+  .goal-text{flex:1;min-width:220px;}
+  .goal-text .label{
+    font-size:12px;text-transform:uppercase;letter-spacing:.1em;
+    color:var(--ink-faint);font-weight:700;margin-bottom:4px;
+  }
+  .goal-text .value{
+    font-family:'Fraunces',serif;
+    font-size:22px;
+    font-weight:600;
+  }
+  .goal-text .value span{color:var(--accent);}
+  .goal-track{
+    flex:2;
+    min-width:220px;
+    height:14px;
+    background:var(--surface-2);
+    border-radius:999px;
+    overflow:hidden;
+    position:relative;
+  }
+  .goal-fill{
+    height:100%;
+    background:linear-gradient(90deg,var(--accent),#4C9A82);
+    border-radius:999px;
+    transition:width .5s cubic-bezier(.3,.8,.4,1);
+  }
+  .goal-pct{
+    font-weight:700;
+    font-size:14px;
+    color:var(--accent);
+    min-width:44px;
+    text-align:right;
+  }
+
+  /* ---------- Funnel (signature element) ---------- */
+  .funnel-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:24px;
+    box-shadow:var(--shadow-card);
+    margin-bottom:28px;
+  }
+  .funnel-head{
+    display:flex;justify-content:space-between;align-items:baseline;
+    margin-bottom:18px;flex-wrap:wrap;gap:8px;
+  }
+  .funnel-head h2{font-size:18px;margin:0;}
+  .funnel-head .hint{font-size:12.5px;color:var(--ink-faint);}
+  .funnel{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:10px;
+  }
+  .funnel-step{
+    position:relative;
+    padding:16px 14px 14px;
+    border-radius:var(--radius-md);
+    text-align:left;
+    overflow:hidden;
+  }
+  .funnel-step .n{
+    font-family:'Fraunces',serif;
+    font-size:26px;
+    font-weight:600;
+    display:block;
+    line-height:1;
+  }
+  .funnel-step .lbl{
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    opacity:.85;
+    margin-top:6px;
+    display:block;
+  }
+  .funnel-step::after{
+    content:"";
+    position:absolute;
+    right:-1px;top:50%;transform:translateY(-50%);
+    width:0;height:0;
+    z-index:2;
+  }
+  .funnel-step .bar{
+    position:absolute;bottom:0;left:0;height:4px;width:100%;
+    opacity:.55;
+  }
+
+  /* ---------- Toolbar ---------- */
+  .toolbar{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin-bottom:18px;
+    flex-wrap:wrap;
+  }
+  .search-box{
+    flex:1;
+    min-width:220px;
+    position:relative;
+  }
+  .search-box input{
+    width:100%;
+    padding:12px 16px 12px 40px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:var(--surface);
+    font-size:14.5px;
+    color:var(--ink);
+    outline:none;
+    transition:border-color .15s;
+  }
+  .search-box input:focus{border-color:var(--accent);}
+  .search-box svg{
+    position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    color:var(--ink-faint);
+  }
+  .chips{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .chip{
+    border:1px solid var(--line);
+    background:var(--surface);
+    color:var(--ink-soft);
+    padding:9px 16px;
+    border-radius:999px;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:all .15s;
+  }
+  .chip:hover{border-color:var(--accent);color:var(--accent);}
+  .chip.active{
+    background:var(--ink);
+    border-color:var(--ink);
+    color:var(--bg);
+  }
+
+  /* ---------- Grid of cards ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+    gap:16px;
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius-md);
+    padding:18px;
+    box-shadow:var(--shadow-card);
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    transition:transform .15s ease, box-shadow .15s ease;
+    position:relative;
+  }
+  .card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(35,33,28,.10);}
+  .card-top{
+    display:flex;justify-content:space-between;align-items:flex-start;gap:8px;
+  }
+  .card-name{font-family:'Fraunces',serif;font-size:17px;font-weight:600;line-height:1.2;}
+  .card-role{font-size:13px;color:var(--ink-soft);margin-top:2px;}
+  .status-pill{
+    font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    padding:5px 10px;border-radius:999px;white-space:nowrap;
+  }
+  .card-meta{
+    display:flex;flex-direction:column;gap:4px;
+    font-size:13px;color:var(--ink-soft);
+  }
+  .card-meta div{display:flex;gap:6px;align-items:center;}
+  .card-meta svg{flex-shrink:0;color:var(--ink-faint);}
+  .followup-badge{
+    align-self:flex-start;
+    font-size:12px;
+    font-weight:700;
+    padding:5px 10px;
+    border-radius:8px;
+    background:var(--danger-soft);
+    color:var(--danger);
+  }
+  .followup-badge.soon{background:var(--s-reuniao-soft);color:var(--s-reuniao);}
+  .card-obs{
+    font-size:12.5px;
+    color:var(--ink-faint);
+    font-style:italic;
+    border-top:1px dashed var(--line);
+    padding-top:8px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .card-actions{
+    position:absolute;top:14px;right:14px;
+    display:none;gap:6px;
+  }
+  .card:hover .card-actions{display:flex;}
+  .icon-btn{
+    background:var(--surface);
+    border:1px solid var(--line);
+    width:28px;height:28px;
+    border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:var(--ink-soft);
+  }
+  .icon-btn:hover{border-color:var(--danger);color:var(--danger);}
+
+  .empty-state{
+    grid-column:1/-1;
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-faint);
+  }
+  .empty-state .display{font-size:20px;color:var(--ink-soft);margin-bottom:6px;}
+
+  /* ---------- Modal ---------- */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(35,33,28,.42);
+    backdrop-filter:blur(2px);
+    display:none;
+    align-items:flex-start;justify-content:center;
+    padding:40px 16px;
+    z-index:50;
+    overflow-y:auto;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:var(--surface);
+    border-radius:var(--radius-lg);
+    width:100%;max-width:560px;
+    padding:28px;
+    box-shadow:var(--shadow-pop);
+    animation:pop .18s ease;
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(8px) scale(.98);}to{opacity:1;transform:none;}}
+  .modal h2{font-size:21px;margin:0 0 4px;}
+  .modal .modal-sub{font-size:13px;color:var(--ink-faint);margin:0 0 20px;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .form-row.full{grid-template-columns:1fr;}
+  .field label{
+    display:block;font-size:12.5px;font-weight:700;color:var(--ink-soft);
+    margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;
+  }
+  .field input,.field select,.field textarea{
+    width:100%;padding:11px 13px;border-radius:var(--radius-sm);
+    border:1px solid var(--line);background:var(--bg);
+    font-family:inherit;font-size:14px;color:var(--ink);outline:none;
+    transition:border-color .15s;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);background:var(--surface);}
+  .field textarea{resize:vertical;min-height:70px;}
+  .modal-actions{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:22px;gap:10px;
+  }
+  .btn-ghost{
+    background:none;border:1px solid var(--line);color:var(--ink-soft);
+    padding:12px 20px;border-radius:999px;font-weight:600;font-size:14px;cursor:pointer;
+  }
+  .btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
+  .btn-delete-text{
+    background:none;border:none;color:var(--danger);font-weight:600;font-size:13.5px;
+    cursor:pointer;padding:8px 4px;
+  }
+  .save-note{
+    font-size:12px;color:var(--ink-faint);margin-top:8px;min-height:16px;
+  }
+
+  .toast{
+    position:fixed;
+    left:50%;bottom:24px;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--bg);
+    padding:12px 20px;border-radius:999px;
+    font-size:13.5px;font-weight:600;
+    box-shadow:var(--shadow-pop);
+    opacity:0;pointer-events:none;
+    transition:opacity .25s ease, transform .25s ease;
+    z-index:80;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  @media (max-width:760px){
+    .funnel{grid-template-columns:repeat(3,1fr);}
+    .form-row{grid-template-columns:1fr;}
+    .brand-title{font-size:27px;}
+    .header-actions{align-items:flex-start;}
+  }
+  @media (max-width:480px){
+    .funnel{grid-template-columns:repeat(2,1fr);}
+    .wrap{padding:20px 14px 60px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <p class="brand-eyebrow">Social Studio · Prospecção</p>
+      <h1 class="brand-title">Radar de Clientes</h1>
+      <p class="brand-sub">Acompanhe cada contato desde o primeiro "oi" até virar cliente — sincronizado em tempo real, em qualquer dispositivo.</p>
+    </div>
+    <div class="header-actions">
+      <span class="sync-badge conectando" id="syncBadge">
+        <span class="sync-dot pulse"></span>
+        <span id="syncLabel">Conectando…</span>
+      </span>
+      <button class="btn-primary" id="newContactBtn" onclick="openModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Novo contato
+      </button>
+    </div>
+  </header>
+
+  <div class="goal-card">
+    <div class="goal-text">
+      <div class="label">Meta de prospecção</div>
+      <div class="value"><span id="goalCount">0</span> de 100 contatos abordados</div>
+    </div>
+    <div class="goal-track"><div class="goal-fill" id="goalFill" style="width:0%"></div></div>
+    <div class="goal-pct" id="goalPct">0%</div>
+  </div>
+
+  <div class="funnel-card">
+    <div class="funnel-head">
+      <h2 class="display">Funil de prospecção</h2>
+      <span class="hint">Cada etapa soma quem chegou até ali ou foi além</span>
+    </div>
+    <div class="funnel" id="funnelGrid"></div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Pesquisar por nome..." oninput="render()">
+    </div>
+    <div class="chips" id="filterChips"></div>
+  </div>
+
+  <div class="grid" id="cardsGrid"></div>
+
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h2 id="modalTitle">Novo contato</h2>
+    <p class="modal-sub">Preencha o que você já sabe — dá pra completar depois.</p>
+
+    <input type="hidden" id="contactId">
+
+    <div class="form-row">
+      <div class="field">
+        <label>Nome *</label>
+        <input type="text" id="f_nome" placeholder="Ex: Ana Ribeiro">
+      </div>
+      <div class="field">
+        <label>Profissão</label>
+        <input type="text" id="f_profissao" placeholder="Ex: Terapeuta">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label>Instagram</label>
+        <input type="text" id="f_instagram" placeholder="@usuario">
+      </div>
+      <div class="field">
+        <label>WhatsApp</label>
+        <input type="text" id="f_whatsapp" placeholder="(00) 00000-0000">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label>Cidade</label>
+        <input type="text" id="f_cidade" placeholder="Ex: Rio das Ostras">
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="f_status">
+          <option>Novo</option>
+          <option>Contatado</option>
+          <option>Respondeu</option>
+          <option>Reunião</option>
+          <option>Proposta</option>
+          <option>Cliente</option>
+          <option>Perdido</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="field">
+        <label>Data do 1º contato</label>
+        <input type="date" id="f_data">
+      </div>
+      <div class="field">
+        <label>Próximo follow-up</label>
+        <input type="date" id="f_followup">
+      </div>
+    </div>
+
+    <div class="form-row full">
+      <div class="field">
+        <label>Observações</label>
+        <textarea id="f_obs" placeholder="Contexto da conversa, objeções, próximos passos..."></textarea>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-delete-text" id="deleteBtn" onclick="deleteContact()" style="display:none;">Excluir contato</button>
+      <div style="display:flex;gap:10px;margin-left:auto;">
+        <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button class="btn-primary" id="saveBtn" onclick="saveContact()">Salvar</button>
+      </div>
+    </div>
+    <div class="save-note" id="saveNote"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ================= FIREBASE (módulo) ================= -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  /* ---------- Configuração do Firebase ---------- */
+  const firebaseConfig = {
+    apiKey: "AIzaSyDsNGKE1mMAc8-6g-jUZG_2QAf9uioyqx0",
+    authDomain: "calend-ca9e0.firebaseapp.com",
+    projectId: "calend-ca9e0",
+    storageBucket: "calend-ca9e0.firebasestorage.app",
+    messagingSenderId: "1077010914412",
+    appId: "1:1077010914412:web:5d50af6702ad82b7458c49"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Documento único que guarda a lista inteira de contatos do Radar
+  const DOC_REF = doc(db, "radar_prospeccao", "dados");
+
+  const LOCAL_CACHE_KEY = "radar_prospeccao_cache_v1";
+
+  /* ---------- Estado local em memória ---------- */
+  // "contacts" é a fonte de verdade em tela; sempre reflete o Firestore
+  // (ou o cache local, quando estamos offline).
+  window.contacts = [];
+  window.activeFilter = 'Todos';
+  window.isSaving = false;
+  window.isOnline = false; // torna-se true assim que o primeiro snapshot chega
+
+  /* ---------- Indicador de status ---------- */
+  function setSyncStatus(state, label){
+    const badge = document.getElementById('syncBadge');
+    const dot = badge.querySelector('.sync-dot');
+    const text = document.getElementById('syncLabel');
+    badge.classList.remove('conectando','sincronizado','erro');
+    badge.classList.add(state);
+    text.textContent = label;
+    if(state === 'conectando'){
+      dot.classList.add('pulse');
+    } else {
+      dot.classList.remove('pulse');
+    }
+  }
+  window.setSyncStatus = setSyncStatus;
+
+  function showToast(msg){
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(()=> toast.classList.remove('show'), 2400);
+  }
+  window.showToast = showToast;
+
+  /* ---------- Cache local (apenas fallback offline, não é a fonte principal) ---------- */
+  function salvarCacheLocal(lista){
+    try{
+      localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify(lista));
+    }catch(e){
+      // se o localStorage falhar (modo privado, cota cheia etc.) apenas ignora,
+      // pois o Firestore continua sendo a fonte real dos dados.
+    }
+  }
+  function carregarCacheLocal(){
+    try{
+      const raw = localStorage.getItem(LOCAL_CACHE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){
+      return [];
+    }
+  }
+
+  /* ---------- carregarDados(): leitura única (cold start) ---------- */
+  async function carregarDados(){
+    try{
+      const snap = await getDoc(DOC_REF);
+      if(snap.exists()){
+        const data = snap.data();
+        window.contacts = Array.isArray(data.contacts) ? data.contacts : [];
+      } else {
+        // Documento ainda não existe no Firestore: cria vazio.
+        await setDoc(DOC_REF, { contacts: [], atualizadoEm: Date.now() });
+        window.contacts = [];
+      }
+      salvarCacheLocal(window.contacts);
+      window.isOnline = true;
+      window.render();
+    }catch(err){
+      console.error('Erro ao carregar dados do Firestore:', err);
+      // Sem conexão: usa o cache local só para não deixar a tela vazia.
+      window.contacts = carregarCacheLocal();
+      window.isOnline = false;
+      setSyncStatus('erro', 'Erro de conexão — modo offline');
+      window.render();
+    }
+  }
+  window.carregarDados = carregarDados;
+
+  /* ---------- salvarDados(): grava a lista inteira no Firestore ---------- */
+  async function salvarDados(){
+    window.isSaving = true;
+    const note = document.getElementById('saveNote');
+    if(note) note.textContent = 'Salvando...';
+    try{
+      await setDoc(DOC_REF, {
+        contacts: window.contacts,
+        atualizadoEm: Date.now()
+      }, { merge: true });
+      // Guarda cache local só como apoio offline
+      salvarCacheLocal(window.contacts);
+      setSyncStatus('sincronizado', 'Sincronizado');
+      if(note) note.textContent = '';
+    }catch(err){
+      console.error('Erro ao salvar no Firestore:', err);
+      // Mesmo sem salvar no servidor, guarda no cache local
+      // para não perder a alteração feita offline.
+      salvarCacheLocal(window.contacts);
+      setSyncStatus('erro', 'Erro ao salvar — verifique sua conexão');
+      if(note) note.textContent = 'Não foi possível salvar agora. Suas alterações estão guardadas localmente e serão reenviadas quando a conexão voltar.';
+      showToast('Sem conexão: alteração guardada localmente');
+    }finally{
+      window.isSaving = false;
+    }
+  }
+  window.salvarDados = salvarDados;
+
+  /* ---------- sincronizarTempoReal(): mantém tudo atualizado ao vivo ---------- */
+  function sincronizarTempoReal(){
+    setSyncStatus('conectando', 'Conectando…');
+    onSnapshot(DOC_REF, (snap) => {
+      if(snap.exists()){
+        const data = snap.data();
+        window.contacts = Array.isArray(data.contacts) ? data.contacts : [];
+        salvarCacheLocal(window.contacts);
+      }
+      window.isOnline = true;
+      setSyncStatus('sincronizado', 'Sincronizado em tempo real');
+      window.render();
+    }, (err) => {
+      console.error('Erro na sincronização em tempo real:', err);
+      window.isOnline = false;
+      setSyncStatus('erro', 'Erro de conexão — modo offline');
+      // Se ainda não temos nada em tela, usa o cache local.
+      if(!window.contacts || window.contacts.length === 0){
+        window.contacts = carregarCacheLocal();
+        window.render();
+      }
+    });
+  }
+  window.sincronizarTempoReal = sincronizarTempoReal;
+
+  /* ---------- Inicialização ---------- */
+  (async function iniciar(){
+    // Mostra algo na tela imediatamente usando o cache, enquanto conecta.
+    window.contacts = carregarCacheLocal();
+    window.render();
+
+    await carregarDados();      // leitura inicial (cold start)
+    sincronizarTempoReal();     // liga o listener ao vivo (onSnapshot)
+  })();
+</script>
+
+<!-- ================= INTERFACE / LÓGICA DO CRM ================= -->
+<script>
+const GOAL = 100;
+
+const STATUS_ORDER = ['Novo','Contatado','Respondeu','Reunião','Proposta','Cliente'];
+const STATUS_STYLE = {
+  'Novo':      {c:'var(--s-novo)',    bg:'var(--s-novo-soft)'},
+  'Contatado': {c:'var(--s-contatado)',bg:'var(--s-contatado-soft)'},
+  'Respondeu': {c:'var(--s-respondeu)',bg:'var(--s-respondeu-soft)'},
+  'Reunião':   {c:'var(--s-reuniao)', bg:'var(--s-reuniao-soft)'},
+  'Proposta':  {c:'var(--s-proposta)',bg:'var(--s-proposta-soft)'},
+  'Cliente':   {c:'var(--s-cliente)', bg:'var(--s-cliente-soft)'},
+  'Perdido':   {c:'var(--s-perdido)', bg:'var(--s-perdido-soft)'}
+};
+
+function uid(){ return 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+
+/* ---------- Rendering ---------- */
+// "contacts" e "activeFilter" vivem em window (definidos no módulo do Firebase)
+// para que o snapshot em tempo real e a interface compartilhem o mesmo estado.
+
+function render(){
+  renderGoal();
+  renderFunnel();
+  renderChips();
+  renderCards();
+}
+window.render = render;
+
+function renderGoal(){
+  const contatados = window.contacts.filter(c => c.status !== 'Novo').length;
+  const pct = Math.min(100, Math.round((contatados / GOAL) * 100));
+  document.getElementById('goalCount').textContent = contatados;
+  document.getElementById('goalFill').style.width = pct + '%';
+  document.getElementById('goalPct').textContent = pct + '%';
+}
+
+function stageReachedCount(stage){
+  const idx = STATUS_ORDER.indexOf(stage);
+  return window.contacts.filter(c => STATUS_ORDER.indexOf(c.status) >= idx).length;
+}
+
+function renderFunnel(){
+  const grid = document.getElementById('funnelGrid');
+  const labels = {
+    'Novo':'Contatos', 'Contatado':'Contatados', 'Respondeu':'Respostas',
+    'Reunião':'Reuniões', 'Proposta':'Propostas', 'Cliente':'Clientes'
+  };
+  grid.innerHTML = STATUS_ORDER.map(stage=>{
+    const n = stage === 'Novo' ? window.contacts.length : stageReachedCount(stage);
+    const style = STATUS_STYLE[stage];
+    return `<div class="funnel-step" style="background:${style.bg};color:${style.c};">
+      <span class="n">${n}</span>
+      <span class="lbl">${labels[stage]}</span>
+      <div class="bar" style="background:${style.c};"></div>
+    </div>`;
+  }).join('');
+}
+
+function renderChips(){
+  const chips = document.getElementById('filterChips');
+  const all = ['Todos', ...STATUS_ORDER, 'Perdido'];
+  chips.innerHTML = all.map(s=>{
+    const count = s === 'Todos' ? window.contacts.length : window.contacts.filter(c=>c.status===s).length;
+    return `<button class="chip ${window.activeFilter===s?'active':''}" onclick="setFilter('${s}')">${s} (${count})</button>`;
+  }).join('');
+}
+function setFilter(s){ window.activeFilter = s; render(); }
+window.setFilter = setFilter;
+
+function renderCards(){
+  const grid = document.getElementById('cardsGrid');
+  const q = document.getElementById('searchInput').value.trim().toLowerCase();
+
+  let list = window.contacts.filter(c=>{
+    const matchStatus = window.activeFilter === 'Todos' || c.status === window.activeFilter;
+    const matchSearch = !q || (c.nome || '').toLowerCase().includes(q);
+    return matchStatus && matchSearch;
+  });
+
+  list = list.slice().sort((a,b) => (b.dataCadastro||0) - (a.dataCadastro||0));
+
+  if(list.length === 0){
+    grid.innerHTML = `<div class="empty-state">
+      <div class="display">Nenhum contato por aqui ainda</div>
+      <div>Clique em "Novo contato" para começar a preencher seu radar.</div>
+    </div>`;
+    return;
+  }
+
+  const today = todayISO();
+
+  grid.innerHTML = list.map(c=>{
+    const style = STATUS_STYLE[c.status] || STATUS_STYLE['Novo'];
+    let followBadge = '';
+    if(c.followup && c.status !== 'Cliente' && c.status !== 'Perdido'){
+      if(c.followup < today){
+        followBadge = `<span class="followup-badge">Follow-up atrasado — ${formatDate(c.followup)}</span>`;
+      } else if(c.followup === today){
+        followBadge = `<span class="followup-badge soon">Follow-up hoje</span>`;
+      } else {
+        followBadge = `<span class="followup-badge soon" style="background:var(--surface-2);color:var(--ink-soft);">Follow-up ${formatDate(c.followup)}</span>`;
+      }
+    }
+    return `<div class="card" onclick="openModal('${c.id}')">
+      <div class="card-actions" onclick="event.stopPropagation();">
+        <button class="icon-btn" title="Excluir" onclick="quickDelete('${c.id}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>
+        </button>
+      </div>
+      <div class="card-top">
+        <div>
+          <div class="card-name">${escapeHTML(c.nome || 'Sem nome')}</div>
+          <div class="card-role">${escapeHTML(c.profissao || '—')}${c.cidade ? ' · ' + escapeHTML(c.cidade) : ''}</div>
+        </div>
+        <span class="status-pill" style="background:${style.bg};color:${style.c};">${c.status}</span>
+      </div>
+      <div class="card-meta">
+        ${c.instagram ? `<div>${iconInsta()} ${escapeHTML(c.instagram)}</div>` : ''}
+        ${c.whatsapp ? `<div>${iconWhats()} ${escapeHTML(c.whatsapp)}</div>` : ''}
+        ${c.dataContato ? `<div>${iconCal()} 1º contato: ${formatDate(c.dataContato)}</div>` : ''}
+      </div>
+      ${followBadge}
+      ${c.observacoes ? `<div class="card-obs">${escapeHTML(c.observacoes)}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function formatDate(iso){
+  if(!iso) return '';
+  const [y,m,d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+function escapeHTML(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+}
+function iconInsta(){ return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>`; }
+function iconWhats(){ return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>`; }
+function iconCal(){ return `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`; }
+
+/* ---------- Modal / CRUD ---------- */
+
+function openModal(id){
+  const overlay = document.getElementById('overlay');
+  const title = document.getElementById('modalTitle');
+  const deleteBtn = document.getElementById('deleteBtn');
+  document.getElementById('saveNote').textContent = '';
+
+  if(id){
+    const c = window.contacts.find(x=>x.id===id);
+    if(!c) return;
+    document.getElementById('contactId').value = c.id;
+    document.getElementById('f_nome').value = c.nome || '';
+    document.getElementById('f_profissao').value = c.profissao || '';
+    document.getElementById('f_instagram').value = c.instagram || '';
+    document.getElementById('f_whatsapp').value = c.whatsapp || '';
+    document.getElementById('f_cidade').value = c.cidade || '';
+    document.getElementById('f_status').value = c.status || 'Novo';
+    document.getElementById('f_data').value = c.dataContato || '';
+    document.getElementById('f_followup').value = c.followup || '';
+    document.getElementById('f_obs').value = c.observacoes || '';
+    title.textContent = 'Editar contato';
+    deleteBtn.style.display = 'inline-block';
+  } else {
+    document.getElementById('contactId').value = '';
+    document.getElementById('f_nome').value = '';
+    document.getElementById('f_profissao').value = '';
+    document.getElementById('f_instagram').value = '';
+    document.getElementById('f_whatsapp').value = '';
+    document.getElementById('f_cidade').value = '';
+    document.getElementById('f_status').value = 'Novo';
+    document.getElementById('f_data').value = todayISO();
+    document.getElementById('f_followup').value = '';
+    document.getElementById('f_obs').value = '';
+    title.textContent = 'Novo contato';
+    deleteBtn.style.display = 'none';
+  }
+  overlay.classList.add('open');
+}
+window.openModal = openModal;
+
+function closeModal(){
+  document.getElementById('overlay').classList.remove('open');
+}
+window.closeModal = closeModal;
+
+async function saveContact(){
+  const nome = document.getElementById('f_nome').value.trim();
+  if(!nome){
+    document.getElementById('f_nome').focus();
+    document.getElementById('f_nome').style.borderColor = 'var(--danger)';
+    return;
+  }
+
+  const id = document.getElementById('contactId').value;
+  const data = {
+    nome,
+    profissao: document.getElementById('f_profissao').value.trim(),
+    instagram: document.getElementById('f_instagram').value.trim(),
+    whatsapp: document.getElementById('f_whatsapp').value.trim(),
+    cidade: document.getElementById('f_cidade').value.trim(),
+    status: document.getElementById('f_status').value,
+    dataContato: document.getElementById('f_data').value,
+    followup: document.getElementById('f_followup').value,
+    observacoes: document.getElementById('f_obs').value.trim()
+  };
+
+  if(id){
+    const idx = window.contacts.findIndex(c=>c.id===id);
+    if(idx > -1) window.contacts[idx] = {...window.contacts[idx], ...data};
+  } else {
+    window.contacts.push({ id: uid(), dataCadastro: Date.now(), ...data });
+  }
+
+  // Atualiza a tela imediatamente (otimista) e depois grava no Firestore.
+  render();
+  closeModal();
+  await window.salvarDados();
+}
+window.saveContact = saveContact;
+
+async function deleteContact(){
+  const id = document.getElementById('contactId').value;
+  if(!id) return;
+  if(!confirm('Excluir este contato? Essa ação não pode ser desfeita.')) return;
+  window.contacts = window.contacts.filter(c=>c.id!==id);
+  render();
+  closeModal();
+  await window.salvarDados();
+}
+window.deleteContact = deleteContact;
+
+async function quickDelete(id){
+  if(!confirm('Excluir este contato? Essa ação não pode ser desfeita.')) return;
+  window.contacts = window.contacts.filter(c=>c.id!==id);
+  render();
+  await window.salvarDados();
+}
+window.quickDelete = quickDelete;
+
+document.getElementById('overlay').addEventListener('click', (e)=>{
+  if(e.target.id === 'overlay') closeModal();
+});
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') closeModal();
+});
+</script>
+</body>
+</html>
